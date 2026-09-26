@@ -94,19 +94,12 @@ fi
 
 echo ""
 echo "============================================"
-echo "第 6 步（可选）：下载社区 TensorRT 参考实现"
-echo "  仓库: carpedm20/locate-anything-tensorrt"
-echo "  注意：当前版本针对 RTX 5090 (SM120)，仅供部署思路参考"
-echo "============================================"
-hf download carpedm20/locate-anything-tensorrt \
-    --local-dir "$MODEL_DIR/locate-anything-tensorrt-reference"
-
-echo ""
-echo "============================================"
 echo "✅ 所有资源下载完成！"
 echo "  模型权重: $MODEL_DIR/LocateAnything-3B"
 echo "  官方代码: $CODE_DIR/Eagle/Embodied"
-echo "  TRT参考 : $MODEL_DIR/locate-anything-tensorrt-reference"
+echo ""
+echo "  说明：官方不支持 TensorRT，社区 TRT 实现仅针对 RTX 5090 (SM120)，"
+echo "        在 AGX Orin (SM87) 上不适用，因此不在本脚本下载范围内。"
 echo ""
 echo "  后续使用环境："
 echo "    source $VENV_DIR/bin/activate"

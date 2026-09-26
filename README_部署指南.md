@@ -1,4 +1,4 @@
-# LocateAnything-3B 在 AGX Orin 64GB 上的部署指南
+ # LocateAnything-3B 在 AGX Orin 64GB 上的部署指南
 
 ## 一、资源位置汇总
 
@@ -7,7 +7,6 @@
 | 官方模型权重 | `nvidia/LocateAnything-3B` | 基于 Qwen2.5-3B-Instruct，BF16，约 7.66GB |
 | 官方 demo 代码 | `NVlabs/Eagle` → `Embodied/` | 核心脚本 `locateanything_worker.py` |
 | 在线 Demo | `nvidia/LocateAnything` (HF Spaces) | 参考交互界面 |
-| 社区 TRT 实现 | `carpedm20/locate-anything-tensorrt` | 仅供参考，当前仅 RTX5090 |
 
 ---
 
@@ -71,17 +70,11 @@ git clone https://github.com/NVlabs/Eagle.git ./code/Eagle
 cd <本项目根目录>
 ./download.sh
 ```
-脚本会自动：创建虚拟环境 → 安装下载工具 → 下载模型权重 → 下载官方代码 →（可选下载社区 TRT 参考）。
+脚本会自动：创建虚拟环境 → 安装下载工具 → 下载模型权重 → 检查官方代码（已随仓库分发则跳过）。
 
 核心推理脚本路径：
 ```
 code/Eagle/Embodied/locateanything_worker.py
-```
-
-### 4. （可选）下载社区 TensorRT 参考实现
-```bash
-cd <本项目根目录>
-hf download carpedm20/locate-anything-tensorrt --local-dir ./models/locate-anything-tensorrt-reference
 ```
 
 ---
