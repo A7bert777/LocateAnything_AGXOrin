@@ -7,7 +7,14 @@
 #   venv310/bin/pip install https://developer.download.nvidia.com/compute/redist/jp/v61/pytorch/torch-2.5.0a0+872d972e41.nv24.08.17622132-cp310-cp310-linux_aarch64.whl
 
 # ===== 核心推理依赖 =====
-transformers>=4.57.1
+#
+# ⚠️ 关键：必须锁定 transformers < 5.0
+#   transformers 5.x 新增了 "PyTorch >= 2.5" 的硬检查，而 Jetson 专用 torch
+#   版本号是 2.5.0a0+...（a0 为预发布标记，语义上 < 2.5），会被 5.x 误判为
+#   不合格，进而打印 "Disabling PyTorch" 并禁用整个 PyTorch 后端，导致：
+#       is_torch_available() == False
+#   最终模型完全无法加载。4.57.1 无此检查，可正常识别 Jetson torch。
+transformers>=4.57.1,<5.0.0
 tokenizers>=0.22.0
 # 模型代码 modeling_locateanything.py 中 import numpy 的 peft（LoRA 包装）
 peft>=0.20.0
@@ -16,11 +23,23 @@ numpy==1.26.4
 Pillow>=11.1.0
 safetensors>=0.4.0
 accelerate>=1.0.0
+# 模型 processing_locateanything.py 中 import 的 HTTP 读取依赖（纯 Python，安全）
+requests
 
 # ===== 关键：提供 libcusparseLt.so.0（torch 硬依赖）=====
 # PyPI 上的 nvidia-cusparselt-cu12 有 aarch64 版本
 nvidia-cusparselt-cu12==0.8.1
 
-# ===== 可选：图像/视频处理 =====
-# opencv-python-headless 需要 numpy>=2，会与 torch 冲突，暂不安装
-# opencv-python-headless>=4.11.0
+# ============================================================
+# ⚠️ 以下 3 个包**不在此文件安装**，由 setup.sh 用 --no-deps 单独处理：
+#
+#     torchvision==0.20.0
+#     opencv-python-headless==4.10.0.84
+#     lmdb
+#
+# 原因：torchvision 在 PyPI 上声明依赖 `torch==2.5.0`（正式版）。若直接加入
+# 本文件，pip 会下载 91MB 的通用版 torch **覆盖掉 NVIDIA 专用 GPU wheel**，
+# 导致 CUDA 失效（torch.cuda.is_available() 变为 False）。
+#
+# 因此 setup.sh 中统一使用 `pip install --no-deps` 安装，以保护 Jetson torch。
+# ============================================================

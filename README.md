@@ -45,7 +45,7 @@ git clone https://github.com/A7bert777/LocateAnything_AGXOrin.git
 cd LocateAnything_AGXOrin
 
 # 首次使用，赋予脚本可执行权限
-chmod +x download.sh setup.sh run.sh
+chmod +x download.sh setup.sh run.sh patch_agx_orin.sh
 ```
 
 ### 步骤 2：下载模型权重
@@ -109,12 +109,54 @@ chmod +x download.sh setup.sh run.sh
 
 ---
 
+## 常见问题排查
+
+### 问题：报 `ImportError: This modeling file requires the following packages that were not found: cv2, decord, lmdb, requests, torchvision`
+
+**这是 Jetson 平台上必然出现的环境问题**，根因有三层（`patch_agx_orin.sh` 已自动处理）：
+
+| # | 根因 | 现象 | 修复 |
+|---|------|------|------|
+| 1 | **transformers 版本装成了 5.x** | 打印 `Disabling PyTorch because PyTorch >= 2.5 is required but found 2.5.0a0+...`，随后 `is_torch_available()==False` | 降级到 `4.57.1` |
+| 2 | **PyPI 版 torchvision 与 Jetson torch ABI 不匹配** | `RuntimeError: operator torchvision::nms does not exist` | 打补丁跳过 `_meta_registrations` |
+| 3 | **decord 在 aarch64 无预编译 wheel** | 被 transformers 静态检查拦截 | 创建空实现（图像检测不需要视频解码） |
+
+**关于第 1 点（最隐蔽的坑）**：Jetson 专用 torch 版本号为 `2.5.0a0+872d972e41.nv24.08`，
+其中的 `a0` 是 PEP 440 的**预发布标记**，语义上 `2.5.0a0 < 2.5`。transformers 5.x
+新增了 PyTorch 版本硬检查，会因此误判并**禁用整个 PyTorch 后端**。
+`requirements.txt` 已锁定 `transformers>=4.57.1,<5.0.0`。
+
+**关于第 2 点**：`torchvision==0.20.0` 在 PyPI 上声明依赖 `torch==2.5.0`（正式版）。
+若不加 `--no-deps` 直接安装，pip 会下载 91MB 的通用版 torch **覆盖 NVIDIA GPU wheel**，
+导致 `torch.cuda.is_available()` 变为 `False`。因此必须用 `--no-deps` 安装。
+
+### 一键修复
+
+```bash
+cd <本项目根目录>
+./patch_agx_orin.sh
+```
+
+该脚本**幂等**，可重复执行。`setup.sh` 已自动调用它（第 4/5 步）。
+
+### 其他常见提示
+
+| 提示信息 | 是否需处理 |
+|---------|-----------|
+| `Failed to load image Python extension: ...undefined symbol...` | **可忽略**，本工程不使用 `torchvision.io` 读图 |
+| `Encountered exception while importing decord` | **可忽略**，仅视频功能不可用 |
+| `Using a slow image processor as use_fast is unset` | **可忽略**，正常提示 |
+| `Loading checkpoint shards: 100%` | 正常，模型加载进度 |
+
+---
+
 ## 项目结构
 
 ```
 LocateAnything_AGXOrin/
 ├── run.sh                      # 启动脚本（自动设置环境变量并运行）
 ├── setup.sh                    # 环境配置脚本（重建 venv310 + 装 torch）
+├── patch_agx_orin.sh           # AGX Orin 适配补丁（幂等，setup.sh 自动调用）
 ├── download.sh                 # 资源下载脚本（模型权重）
 ├── detect.py                   # 目标检测工具（YOLOv8 风格 CLI）
 ├── inference_test.py           # 推理自检脚本

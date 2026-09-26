@@ -23,7 +23,7 @@ echo "============================================================"
 # 第 1 步：创建 Python 3.10 虚拟环境
 # ------------------------------------------------------------
 echo ""
-echo "[1/4] 创建 Python 3.10 虚拟环境..."
+echo "[1/5] 创建 Python 3.10 虚拟环境..."
 if [ ! -d "$VENV_DIR" ]; then
     # 用 --without-pip 创建（因为系统 python3.10 缺 ensurepip）
     python3.10 -m venv --without-pip "$VENV_DIR"
@@ -52,7 +52,7 @@ echo "    LD_LIBRARY_PATH 已设置: $LD_LIBRARY_PATH"
 # 第 2 步：安装 PyTorch（NVIDIA Jetson 专用 GPU 版）+ cuSparseLt
 # ------------------------------------------------------------
 echo ""
-echo "[2/4] 安装 PyTorch (Jetson GPU 版) + cuSparseLt..."
+echo "[2/5] 安装 PyTorch (Jetson GPU 版) + cuSparseLt..."
 if "$VENV_DIR/bin/python" -c "import torch" 2>/dev/null; then
     echo "    PyTorch 已安装，跳过"
 else
@@ -80,14 +80,31 @@ fi
 # 第 3 步：安装模型推理依赖
 # ------------------------------------------------------------
 echo ""
-echo "[3/4] 安装模型推理依赖..."
+echo "[3/5] 安装模型推理依赖..."
 "$VENV_DIR/bin/pip" install -r "$PROJECT_DIR/requirements.txt"
 
 # ------------------------------------------------------------
-# 第 4 步：验证环境
+# 第 4 步：AGX Orin 适配补丁（关键！）
+#
+# 修复 3 个在 Jetson 上必然出现的问题（详见 patch_agx_orin.sh 注释）：
+#   1. transformers 5.x 误判 Jetson torch 版本 → 禁用 PyTorch 后端
+#   2. PyPI 版 torchvision 与 NVIDIA 定制版 torch ABI 不匹配
+#   3. decord 在 aarch64 无 wheel，被 transformers 静态检查拦截
 # ------------------------------------------------------------
 echo ""
-echo "[4/4] 验证环境..."
+echo "[4/5] 应用 AGX Orin 适配补丁..."
+if [ -f "$PROJECT_DIR/patch_agx_orin.sh" ]; then
+    chmod +x "$PROJECT_DIR/patch_agx_orin.sh"
+    bash "$PROJECT_DIR/patch_agx_orin.sh"
+else
+    echo "    ⚠️  未找到 patch_agx_orin.sh，跳过（可能导致模型无法加载）"
+fi
+
+# ------------------------------------------------------------
+# 第 5 步：验证环境
+# ------------------------------------------------------------
+echo ""
+echo "[5/5] 验证环境..."
 "$VENV_DIR/bin/python" -c "
 import torch
 print(f'    ✅ torch {torch.__version__}')
