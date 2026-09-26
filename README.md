@@ -36,7 +36,12 @@
 ### 步骤 1：克隆仓库
 
 ```bash
-git clone git@github.com:A7bert777/LocateAnything_AGXOrin.git
+# 方式 A：HTTPS（推荐，无需配置 SSH 密钥）
+git clone https://github.com/A7bert777/LocateAnything_AGXOrin.git
+
+# 方式 B：SSH（需已在 GitHub 配置 SSH 公钥）
+# git clone git@github.com:A7bert777/LocateAnything_AGXOrin.git
+
 cd LocateAnything_AGXOrin
 
 # 首次使用，赋予脚本可执行权限
