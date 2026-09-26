@@ -1,0 +1,26 @@
+# LocateAnything-3B 推理依赖清单
+# 适用环境: AGX Orin 64GB / JetPack 6.2 / Python 3.10
+
+# ===== torch 需单独安装（NVIDIA Jetson 专用 wheel）=====
+# 不要用 pip 从 PyPI 安装 torch（那是 CPU 版）
+# 需手动执行：
+#   venv310/bin/pip install https://developer.download.nvidia.com/compute/redist/jp/v61/pytorch/torch-2.5.0a0+872d972e41.nv24.08.17622132-cp310-cp310-linux_aarch64.whl
+
+# ===== 核心推理依赖 =====
+transformers>=4.57.1
+tokenizers>=0.22.0
+# 模型代码 modeling_locateanything.py 中 import numpy 的 peft（LoRA 包装）
+peft>=0.20.0
+# 注意：torch 2.5.0 (nv24.08) 是用 NumPy 1.x 编译的，必须用 numpy<2
+numpy==1.26.4
+Pillow>=11.1.0
+safetensors>=0.4.0
+accelerate>=1.0.0
+
+# ===== 关键：提供 libcusparseLt.so.0（torch 硬依赖）=====
+# PyPI 上的 nvidia-cusparselt-cu12 有 aarch64 版本
+nvidia-cusparselt-cu12==0.8.1
+
+# ===== 可选：图像/视频处理 =====
+# opencv-python-headless 需要 numpy>=2，会与 torch 冲突，暂不安装
+# opencv-python-headless>=4.11.0
