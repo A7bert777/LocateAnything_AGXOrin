@@ -14,7 +14,9 @@
 #   不合格，进而打印 "Disabling PyTorch" 并禁用整个 PyTorch 后端，导致：
 #       is_torch_available() == False
 #   最终模型完全无法加载。4.57.1 无此检查，可正常识别 Jetson torch。
-transformers>=4.57.1,<5.0.0
+#   此处锁定到确切的 4.57.1（而非 >=4.57.1,<5.0.0）——因为后者会让 pip 装
+#   4.57.6，虽同属 4.x 理论上可行，但该版本未经本工程实测验证。
+transformers==4.57.1
 tokenizers>=0.22.0
 # 模型代码 modeling_locateanything.py 中 import numpy 的 peft（LoRA 包装）
 peft>=0.20.0
